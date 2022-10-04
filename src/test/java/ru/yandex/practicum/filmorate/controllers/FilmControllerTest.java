@@ -1,85 +1,36 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exeptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.time.LocalDate;
 
-import static org.springframework.test.util.AssertionErrors.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 class FilmControllerTest {
-    HttpClient httpClient = HttpClient.newHttpClient();
 
-    private final URI URL = URI.create("http://localhost:8080/films");
+    static FilmController filmController;
 
-    @Test
-    void createFailName() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "    \"name\": \"\",\n" +
-                "    \"description\": \"Description\",\n" +
-                "    \"releaseDate\": \"1900-03-25\",\n" +
-                "    \"duration\": 200\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
+    @BeforeEach
+    void beforeEach() {
+        filmController = new FilmController();
     }
 
     @Test
-    void createFailDescription() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "  \"name\": \"Film name\",\n" +
-                "  \"description\": \"Пятеро друзей ( комик-группа «Шарло»), приезжают в город Бризуль. Здесь они хотят разыскать господина Огюста Куглова, который задолжал им деньги, а именно 20 миллионов. о Куглов, который за время «своего отсутствия», стал кандидатом Коломбани.\",\n" +
-                "    \"releaseDate\": \"1900-03-25\",\n" +
-                "  \"duration\": 200\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
+    void createFailDate() {
+        Film film = Film.builder()
+                .id(1)
+                .name("Кинч 1")
+                .description("Описание кинча")
+                .releaseDate(LocalDate.of(555, 2, 3))
                 .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
-    }
-
-    @Test
-    void createFailReleaseDate() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "  \"name\": \"Name\",\n" +
-                "  \"description\": \"Description\",\n" +
-                "  \"releaseDate\": \"1890-03-25\",\n" +
-                "  \"duration\": 200\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
-    }
-
-    @Test
-    void createFailDuration() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "  \"name\": \"Name\",\n" +
-                "  \"description\": \"Descrition\",\n" +
-                "  \"releaseDate\": \"1980-03-25\",\n" +
-                "  \"duration\": -200\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
+        ValidationException thrown = Assertions.assertThrows(
+                ValidationException.class,
+                () -> filmController.create(film));
+        assertTrue(thrown.getMessage().contains("Дата не валидна"));
     }
 }

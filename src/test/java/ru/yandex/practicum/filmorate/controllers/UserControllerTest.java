@@ -1,67 +1,32 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exeptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.User;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-
-import static org.springframework.test.util.AssertionErrors.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserControllerTest {
-    HttpClient httpClient = HttpClient.newHttpClient();
 
-    private final URI URL = URI.create("http://localhost:8080/users");
+    static UserController userController;
 
-    @Test
-    void createFailLogin() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "  \"login\": \"dolore ullamco\",\n" +
-                "  \"email\": \"yandex@mail.ru\",\n" +
-                "  \"birthday\": \"2446-08-20\"\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
+    @BeforeEach
+    void beforeEach() {
+        userController = new UserController();
     }
 
     @Test
-    void createFailEmail() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "    \"login\": \"dolore ullamco\",\n" +
-                "    \"name\": \"\",\n" +
-                "    \"email\": \"mail.ru\",\n" +
-                "    \"birthday\": \"1980-08-20\"\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
+    void putWithoutId() {
+        User user = User.builder()
+                .email("mail@mail.ru")
+                .name("Юзер 1")
+                .login("User luser")
                 .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
-    }
-
-    @Test
-    void createFailBirthday() throws IOException, InterruptedException {
-        String body = "{\n" +
-                "  \"login\": \"dolore\",\n" +
-                "  \"name\": \"\",\n" +
-                "  \"email\": \"test@mail.ru\",\n" +
-                "  \"birthday\": \"2446-08-20\"\n" +
-                "}";
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URL)
-                .setHeader("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertTrue("Не 400 или 500", response.statusCode() == 400 || response.statusCode() == 500);
+        ValidationException thrown = Assertions.assertThrows(
+                ValidationException.class,
+                () -> userController.put(user));
+        assertTrue(thrown.getMessage().contains("User без id"));
     }
 }
