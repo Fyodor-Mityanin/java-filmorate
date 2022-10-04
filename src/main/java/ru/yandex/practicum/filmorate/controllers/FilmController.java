@@ -37,9 +37,13 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film put(@Valid @RequestBody Film film) {
+    public Film put(@Valid @RequestBody Film film) throws ValidationException {
         log.info("обновление фильма");
-        films.remove(film);
+        if (film.getId() == 0) {
+            throw new ValidationException("film без id");
+        }
+        Film optFilm = films.stream().filter(f -> f.getId() == film.getId()).findFirst().orElseThrow();
+        films.remove(optFilm);
         films.add(film);
         return film;
     }
