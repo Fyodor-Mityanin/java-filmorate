@@ -17,13 +17,11 @@ class UserControllerTest {
 
     @Test
     void createFailLogin() throws IOException, InterruptedException {
-        String body = """
-                {
-                      "login": "dolore ullamco",
-                      "email": "yandex@mail.ru",
-                      "birthday": "2446-08-20"
-                }
-                """;
+        String body = "{\n" +
+                "  \"login\": \"dolore ullamco\",\n" +
+                "  \"email\": \"yandex@mail.ru\",\n" +
+                "  \"birthday\": \"2446-08-20\"\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")
@@ -35,14 +33,12 @@ class UserControllerTest {
 
     @Test
     void createFailEmail() throws IOException, InterruptedException {
-        String body = """
-                {
-                    "login": "dolore ullamco",
-                    "name": "",
-                    "email": "mail.ru",
-                    "birthday": "1980-08-20"
-                }
-                """;
+        String body = "{\n" +
+                "    \"login\": \"dolore ullamco\",\n" +
+                "    \"name\": \"\",\n" +
+                "    \"email\": \"mail.ru\",\n" +
+                "    \"birthday\": \"1980-08-20\"\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")
@@ -54,14 +50,12 @@ class UserControllerTest {
 
     @Test
     void createFailBirthday() throws IOException, InterruptedException {
-        String body = """
-                {
-                    "login": "dolore",
-                    "name": "",
-                    "email": "test@mail.ru",
-                    "birthday": "2446-08-20"
-                }
-                """;
+        String body = "{\n" +
+                "  \"login\": \"dolore\",\n" +
+                "  \"name\": \"\",\n" +
+                "  \"email\": \"test@mail.ru\",\n" +
+                "  \"birthday\": \"2446-08-20\"\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")

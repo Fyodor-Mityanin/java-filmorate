@@ -17,14 +17,12 @@ class FilmControllerTest {
 
     @Test
     void createFailName() throws IOException, InterruptedException {
-        String body = """
-                {
-                      "name": "",
-                      "description": "Description",
-                      "releaseDate": "1900-03-25",
-                      "duration": 200
-                }
-                """;
+        String body = "{\n" +
+                "    \"name\": \"\",\n" +
+                "    \"description\": \"Description\",\n" +
+                "    \"releaseDate\": \"1900-03-25\",\n" +
+                "    \"duration\": 200\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")
@@ -36,16 +34,12 @@ class FilmControllerTest {
 
     @Test
     void createFailDescription() throws IOException, InterruptedException {
-        String body = """
-                {
-                      "name": "Film name",
-                      "description": "Пятеро друзей ( комик-группа «Шарло»), приезжают в город Бризуль.
-                       Здесь они хотят разыскать господина Огюста Куглова, который задолжал им деньги, а именно 20 миллионов.
-                       о Куглов, который за время «своего отсутствия», стал кандидатом Коломбани.",
-                        "releaseDate": "1900-03-25",
-                      "duration": 200
-                }
-                """;
+        String body = "{\n" +
+                "  \"name\": \"Film name\",\n" +
+                "  \"description\": \"Пятеро друзей ( комик-группа «Шарло»), приезжают в город Бризуль. Здесь они хотят разыскать господина Огюста Куглова, который задолжал им деньги, а именно 20 миллионов. о Куглов, который за время «своего отсутствия», стал кандидатом Коломбани.\",\n" +
+                "    \"releaseDate\": \"1900-03-25\",\n" +
+                "  \"duration\": 200\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")
@@ -57,14 +51,12 @@ class FilmControllerTest {
 
     @Test
     void createFailReleaseDate() throws IOException, InterruptedException {
-        String body = """
-                {
-                      "name": "Name",
-                      "description": "Description",
-                      "releaseDate": "1890-03-25",
-                      "duration": 200
-                }
-                """;
+        String body = "{\n" +
+                "  \"name\": \"Name\",\n" +
+                "  \"description\": \"Description\",\n" +
+                "  \"releaseDate\": \"1890-03-25\",\n" +
+                "  \"duration\": 200\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")
@@ -76,14 +68,12 @@ class FilmControllerTest {
 
     @Test
     void createFailDuration() throws IOException, InterruptedException {
-        String body = """
-                {
-                      "name": "Name",
-                      "description": "Descrition",
-                      "releaseDate": "1980-03-25",
-                      "duration": -200
-                }
-                """;
+        String body = "{\n" +
+                "  \"name\": \"Name\",\n" +
+                "  \"description\": \"Descrition\",\n" +
+                "  \"releaseDate\": \"1980-03-25\",\n" +
+                "  \"duration\": -200\n" +
+                "}";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URL)
                 .setHeader("Content-Type", "application/json")
