@@ -107,6 +107,6 @@ class FilmControllerTest {
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         violations.forEach(i-> System.out.println(i.getMessage()));
-        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("должно быть больше 0")));
+        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("должно быть больше 0") || i.getMessage().equals("must be greater than 0")));
     }
 }
