@@ -80,7 +80,7 @@ class FilmControllerTest {
                 .duration(120)
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
-        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("не должно быть пустым")));
+        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("не должно быть пустым") || i.getMessage().equals("must not be blank")));
     }
 
     @Test

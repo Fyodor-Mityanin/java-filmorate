@@ -64,7 +64,7 @@ class UserControllerTest {
                 .build();
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         violations.forEach(i-> System.out.println(i.getMessage()));
-        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("не должно быть пустым")));
+        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("не должно быть пустым") || i.getMessage().equals("must not be blank")));
     }
 
     @Test
@@ -88,7 +88,7 @@ class UserControllerTest {
                 .birthday(LocalDate.parse("1987-06-07"))
                 .build();
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("не должно быть пустым")));
+        assertTrue(violations.stream().anyMatch(i -> i.getMessage().equals("не должно быть пустым") || i.getMessage().equals("must not be blank")));
     }
 
     @Test
