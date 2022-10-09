@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -29,5 +30,6 @@ public class User {
     private String name;
 
     @Past(message = "День рождения должен быть в прошлом")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 }
