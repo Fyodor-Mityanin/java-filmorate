@@ -10,12 +10,13 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @Builder
 public class User {
 
-    private int id;
+    private long id;
 
     @NonNull
     @NotBlank
@@ -32,4 +33,6 @@ public class User {
     @Past(message = "День рождения должен быть в прошлом")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
+
+    private Set<Long> friends;
 }

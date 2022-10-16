@@ -3,8 +3,13 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exeptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exeptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -24,7 +29,7 @@ class FilmControllerTest {
 
     @BeforeEach
     void beforeEach() {
-        filmController = new FilmController();
+        filmController = new FilmController(new FilmService(new InMemoryFilmStorage()), new UserService(new InMemoryUserStorage()));
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
@@ -64,10 +69,10 @@ class FilmControllerTest {
                 .description("Описание фильма")
                 .releaseDate(LocalDate.of(2022, 2, 3))
                 .build();
-        ValidationException thrown = Assertions.assertThrows(
-                ValidationException.class,
+        FilmNotFoundException thrown = Assertions.assertThrows(
+                FilmNotFoundException.class,
                 () -> filmController.put(film));
-        assertTrue(thrown.getMessage().contains("film не найден"));
+        assertTrue(thrown.getMessage().contains(String.format("film c id %d не найден", film.getId())));
     }
 
     @Test

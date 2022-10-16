@@ -3,8 +3,11 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exeptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exeptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -22,7 +25,7 @@ class UserControllerTest {
 
     @BeforeEach
     void beforeEach() {
-        userController = new UserController();
+        userController = new UserController(new UserService(new InMemoryUserStorage()));
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
@@ -48,10 +51,10 @@ class UserControllerTest {
                 .name("Юзер 1")
                 .login("User")
                 .build();
-        ValidationException thrown = Assertions.assertThrows(
-                ValidationException.class,
+        UserNotFoundException thrown = Assertions.assertThrows(
+                UserNotFoundException.class,
                 () -> userController.put(user));
-        assertTrue(thrown.getMessage().contains("User не найден"));
+        assertTrue(thrown.getMessage().contains(String.format("Юзер с id %d не найден", user.getId())));
     }
 
     @Test
