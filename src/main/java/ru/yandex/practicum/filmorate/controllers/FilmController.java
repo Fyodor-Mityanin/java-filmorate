@@ -3,10 +3,9 @@ package ru.yandex.practicum.filmorate.controllers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exeptions.*;
+import ru.yandex.practicum.filmorate.exeptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -20,12 +19,9 @@ public class FilmController {
 
     private final FilmService filmService;
 
-    private final UserService userService;
-
     @Autowired
-    public FilmController(FilmService filmService, UserService userService) {
+    public FilmController(FilmService filmService) {
         this.filmService = filmService;
-        this.userService = userService;
     }
 
     @GetMapping
@@ -49,45 +45,21 @@ public class FilmController {
         if (film.getId() == 0) {
             throw new ValidationException("film без id");
         }
-        if (!filmService.isIdExist(film.getId())) {
-            throw new FilmNotFoundException(String.format("film c id %d не найден", film.getId()));
-        }
         return filmService.update(film);
     }
 
     @GetMapping("/{id}")
     public Film getOneById(@PathVariable long id) {
-        if (!filmService.isIdExist(id)) {
-            throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
-        }
         return filmService.getById(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
     public void like(@PathVariable long id, @PathVariable long userId) {
-        if (!filmService.isIdExist(id)) {
-            throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
-        }
-        if (!userService.isIdExist(userId)) {
-            throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
-        }
-        if (filmService.isLiked(id, userId)) {
-            throw new UserToFilmsRelationException("Фильм уже лайкнут");
-        }
         filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public void unlike(@PathVariable long id, @PathVariable long userId) {
-        if (!filmService.isIdExist(id)) {
-            throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
-        }
-        if (!userService.isIdExist(userId)) {
-            throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
-        }
-        if (!filmService.isLiked(id, userId)) {
-            throw new UserToFilmsRelationException("Фильм не лайкнут");
-        }
         filmService.removeLike(id, userId);
     }
 

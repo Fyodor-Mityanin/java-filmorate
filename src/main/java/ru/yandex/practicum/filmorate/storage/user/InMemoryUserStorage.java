@@ -15,7 +15,6 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User add(User user) {
         user.setId(idCounter);
-        user.setFriends(new HashSet<>());
         idCounter++;
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -26,8 +25,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        Set<Long> friendsIds = getUserById(user.getId()).getFriends();
-        user.setFriends(friendsIds);
         addToMap(user);
         return user;
     }

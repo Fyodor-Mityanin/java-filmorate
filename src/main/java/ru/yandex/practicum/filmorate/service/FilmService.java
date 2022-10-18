@@ -2,11 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exeptions.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exeptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exeptions.UserToFilmsRelationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,12 +34,16 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        Set<Long> likes = filmStorage.getById(film.getId()).getLikes();
-        film.setLikes(likes);
+        if (!isIdExist(film.getId())) {
+            throw new FilmNotFoundException(String.format("film c id %d не найден", film.getId()));
+        }
         return filmStorage.update(film);
     }
 
     public Film getById(long id) {
+        if (!isIdExist(id)) {
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
+        }
         return filmStorage.getById(id);
     }
 
@@ -46,10 +52,28 @@ public class FilmService {
     }
 
     public void addLike(long id, long userId) {
+        if (!isIdExist(id)) {
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
+        }
+        if (!isIdExist(userId)) {
+            throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
+        }
+        if (isLiked(id, userId)) {
+            throw new UserToFilmsRelationException("Фильм уже лайкнут");
+        }
         filmStorage.getById(id).getLikes().add(userId);
     }
 
     public void removeLike(long id, long userId) {
+        if (!isIdExist(id)) {
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
+        }
+        if (!isIdExist(userId)) {
+            throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
+        }
+        if (!isLiked(id, userId)) {
+            throw new UserToFilmsRelationException("Фильм не лайкнут");
+        }
         filmStorage.getById(id).getLikes().remove(userId);
     }
 
