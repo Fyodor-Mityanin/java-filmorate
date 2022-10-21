@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exeptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exeptions.UserToFilmsRelationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,9 +17,12 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
 
+    private final UserStorage userStorage;
+
     @Autowired
-    public FilmService(FilmStorage filmStorage) {
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
         this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
     }
 
     public List<Film> findAll() {
@@ -29,22 +33,19 @@ public class FilmService {
         return filmStorage.add(film);
     }
 
-    public boolean isIdExist(long id) {
-        return filmStorage.containsId(id);
-    }
-
     public Film update(Film film) {
-        if (!isIdExist(film.getId())) {
+        if (!filmStorage.containsId(film.getId())) {
             throw new FilmNotFoundException(String.format("film c id %d не найден", film.getId()));
         }
         return filmStorage.update(film);
     }
 
     public Film getById(long id) {
-        if (!isIdExist(id)) {
+        Film film = filmStorage.getById(id);
+        if (film == null) {
             throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
         }
-        return filmStorage.getById(id);
+        return film;
     }
 
     public boolean isLiked(long id, long userId) {
@@ -52,29 +53,31 @@ public class FilmService {
     }
 
     public void addLike(long id, long userId) {
-        if (!isIdExist(id)) {
+        Film film = filmStorage.getById(id);
+        if (film == null) {
             throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
         }
-        if (!isIdExist(userId)) {
+        if (!userStorage.containsId(userId)) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
         }
         if (isLiked(id, userId)) {
             throw new UserToFilmsRelationException("Фильм уже лайкнут");
         }
-        filmStorage.getById(id).getLikes().add(userId);
+        film.getLikes().add(userId);
     }
 
     public void removeLike(long id, long userId) {
-        if (!isIdExist(id)) {
+        Film film = filmStorage.getById(id);
+        if (film == null) {
             throw new FilmNotFoundException(String.format("Фильм с id %d не найден", id));
         }
-        if (!isIdExist(userId)) {
+        if (!userStorage.containsId(userId)) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
         }
         if (!isLiked(id, userId)) {
             throw new UserToFilmsRelationException("Фильм не лайкнут");
         }
-        filmStorage.getById(id).getLikes().remove(userId);
+        film.getLikes().remove(userId);
     }
 
     public List<Film> getMostPopular(Integer count) {

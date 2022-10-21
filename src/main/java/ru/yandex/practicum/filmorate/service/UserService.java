@@ -30,22 +30,18 @@ public class UserService {
         return userStorage.add(user);
     }
 
-    public boolean isIdExist(long id) {
-        return userStorage.containsId(id);
-    }
-
     public User update(User user) {
-        if (!isIdExist(user.getId())) {
+        if (!userStorage.containsId(user.getId())) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", user.getId()));
         }
         return userStorage.update(user);
     }
 
     public void makeFriendship(Long id, Long friendId) {
-        if (!isIdExist(id)) {
+        if (!userStorage.containsId(id)) {
             throw new UserNotFoundException(String.format("Юзера с id %d не существует", id));
         }
-        if (!isIdExist(friendId)) {
+        if (!userStorage.containsId(friendId)) {
             throw new UserNotFoundException(String.format("Юзера с id %d не существует", friendId));
         }
         if (isFriends(id, friendId)) {
@@ -58,10 +54,11 @@ public class UserService {
     }
 
     public User getById(Long id) {
-        if (!isIdExist(id)) {
+        User user = userStorage.getUserById(id);
+        if (user == null) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
         }
-        return userStorage.getUserById(id);
+        return user;
     }
 
     public boolean isFriends(Long id, Long friendId) {
@@ -70,18 +67,18 @@ public class UserService {
     }
 
     public void destroyFriendship(Long id, Long friendId) {
-        if (!isIdExist(id)) {
+        User user = userStorage.getUserById(id);
+        User friend = userStorage.getUserById(friendId);
+        if (user == null) {
             throw new UserNotFoundException(String.format("Юзера с id %d не существует", id));
         }
-        if (!isIdExist(friendId)) {
+        if (friend == null) {
             throw new UserNotFoundException(String.format("Юзера с id %d не существует", friendId));
         }
         if (!isFriends(id, friendId)) {
             throw new UsersRelationException("Вы и так не друзья");
         }
-        User user = userStorage.getUserById(id);
         user.getFriends().remove(friendId);
-        User friend = userStorage.getUserById(friendId);
         friend.getFriends().remove(id);
     }
 
@@ -93,10 +90,10 @@ public class UserService {
     }
 
     public List<User> getAllCommonFriends(long id, long otherId) {
-        if (!isIdExist(id)) {
+        if (!userStorage.containsId(id)) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
         }
-        if (!isIdExist(otherId)) {
+        if (!userStorage.containsId(otherId)) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", otherId));
         }
         Set<Long> userFriendsIds = new HashSet<>(userStorage.getUserById(id).getFriends());
