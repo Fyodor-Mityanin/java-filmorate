@@ -103,4 +103,8 @@ public class UserService {
         userFriendsIds.forEach(friendId -> commonFriends.add(userStorage.getUserById(friendId)));
         return commonFriends;
     }
+
+    public boolean isIdExist(long id) {
+        return userStorage.containsId(id);
+    }
 }
