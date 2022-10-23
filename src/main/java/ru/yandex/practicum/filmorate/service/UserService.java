@@ -38,18 +38,18 @@ public class UserService {
     }
 
     public void makeFriendship(Long id, Long friendId) {
-        if (!userStorage.containsId(id)) {
+        User user = userStorage.getUserById(id);
+        if (user == null) {
             throw new UserNotFoundException(String.format("Юзера с id %d не существует", id));
         }
-        if (!userStorage.containsId(friendId)) {
+        User friend = userStorage.getUserById(friendId);
+        if (friend == null) {
             throw new UserNotFoundException(String.format("Юзера с id %d не существует", friendId));
         }
         if (isFriends(id, friendId)) {
             throw new UsersRelationException("Вы уже друзья");
         }
-        User user = userStorage.getUserById(id);
         user.getFriends().add(friendId);
-        User friend = userStorage.getUserById(friendId);
         friend.getFriends().add(id);
     }
 
