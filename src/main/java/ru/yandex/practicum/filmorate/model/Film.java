@@ -30,9 +30,9 @@ public class Film {
     @Positive
     private int duration;
 
-    private List<String> genre;
+    private List<Integer> genre;
 
-    private String rating;
+    private String mpa;
 
     private final Set<Long> likes = new HashSet<>();
 }

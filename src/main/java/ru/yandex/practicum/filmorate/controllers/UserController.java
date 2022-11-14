@@ -50,18 +50,18 @@ public class UserController {
         return userService.getById(id);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public void addToFriends(@PathVariable Long id, @PathVariable Long friendId) {
-        userService.makeFriendship(id, friendId);
+    @PutMapping("/{authorId}/friends/{subscriberId}")
+    public void subscribe(@PathVariable Long authorId, @PathVariable Long subscriberId) {
+        userService.makeSubscribe(authorId, subscriberId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFromFriends(@PathVariable Long id, @PathVariable Long friendId) {
-        userService.destroyFriendship(id, friendId);
+    @DeleteMapping("/{authorId}/friends/{subscriberId}")
+    public void unSubscribe(@PathVariable Long authorId, @PathVariable Long subscriberId) {
+        userService.removeSubscribe(authorId, subscriberId);
     }
 
     @GetMapping("/{id}/friends")
-    public List<User> getAllFriends(@PathVariable long id) {
+    public List<User> getAllFriends(@PathVariable Long id) {
         if (!userService.isIdExist(id)) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
         }

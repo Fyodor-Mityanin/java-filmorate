@@ -7,8 +7,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -25,7 +27,7 @@ public class FilmDbStorage implements FilmStorage {
         int rowNum = jdbcTemplate.update(
                 "INSERT INTO FILMS (NAME, RATING, DESCRIPTION, RELEASE_DATE, DURATION) VALUES (?, ?, ?, ?, ?)",
                 film.getName(),
-                film.getRating(),
+                film.getMpa(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration()
@@ -41,7 +43,7 @@ public class FilmDbStorage implements FilmStorage {
         int rowNum = jdbcTemplate.update(
                 "UPDATE FILMS SET NAME=?, RATING=?, DESCRIPTION=?, RELEASE_DATE=?, DURATION=? WHERE ID=?",
                 film.getName(),
-                film.getRating(),
+                film.getMpa(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration()
@@ -54,9 +56,9 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getAll() {
         log.info("Поиск всех фильма");
         String sql = "SELECT F.*, group_concat(FG.GENRE_ID separator ',') AS GENRE\n" +
-                "FROM FILMS F\n" +
-                "JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
-                "GROUP BY F.ID";
+                     "FROM FILMS F\n" +
+                     "JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
+                     "GROUP BY F.ID";
         return jdbcTemplate.query(sql, this::makeFilm);
     }
 
@@ -79,11 +81,15 @@ public class FilmDbStorage implements FilmStorage {
 
 
     private Film makeFilm(ResultSet rs, int row) throws SQLException {
+        List<Integer> genres = Arrays.stream(rs.getString("GENRE")
+                .split(","))
+                .map(Integer::valueOf)
+                .collect(Collectors.toList());
         return Film.builder()
                 .id(rs.getLong("ID"))
                 .name(rs.getString("NAME"))
-                .genre(List.of(rs.getString("GENRE").split(",")))
-                .rating(rs.getString("RATING"))
+                .genre(genres)
+                .mpa(rs.getString("RATING"))
                 .description(rs.getString("DESCRIPTION"))
                 .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
                 .duration(rs.getInt("DURATION"))
