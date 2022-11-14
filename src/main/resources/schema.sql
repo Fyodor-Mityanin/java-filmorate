@@ -2,13 +2,14 @@ DROP TABLE IF EXISTS film_genre;
 DROP TABLE IF EXISTS subscribes;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS films;
-DROP TABLE IF EXISTS genre;
+DROP TABLE IF EXISTS mpa;
 DROP TABLE IF EXISTS rating;
 
 CREATE TABLE IF NOT EXISTS films (
     id           int PRIMARY KEY AUTO_INCREMENT,
     name         varchar(255),
-    rating       int,
+    mpa          int,
+    rate         int DEFAULT 0,
     description  varchar(255),
     release_date date,
     duration     int,
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS genre (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS rating (
+CREATE TABLE IF NOT EXISTS mpa (
     id           int PRIMARY KEY AUTO_INCREMENT,
     name         varchar(255),
     PRIMARY KEY (id)
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS film_genre (
     genre_id   int
 );
 
-ALTER TABLE films ADD CONSTRAINT IF NOT EXISTS films_rating_id_fk FOREIGN KEY (rating) REFERENCES rating (id);
+ALTER TABLE films ADD CONSTRAINT IF NOT EXISTS films_mpa_id_fk FOREIGN KEY (mpa) REFERENCES mpa (id);
 
 ALTER TABLE film_genre ADD CONSTRAINT IF NOT EXISTS films_id_fk FOREIGN KEY (film_id) REFERENCES films (id);
 ALTER TABLE film_genre ADD CONSTRAINT IF NOT EXISTS genre_id_fk FOREIGN KEY (genre_id) REFERENCES genre (id);

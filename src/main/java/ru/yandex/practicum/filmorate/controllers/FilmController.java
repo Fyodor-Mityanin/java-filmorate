@@ -42,7 +42,7 @@ public class FilmController {
     @PutMapping
     public Film put(@Valid @RequestBody Film film) throws ValidationException {
         log.info("обновление фильма");
-        if (film.getId() == 0) {
+        if (film.getId() == null) {
             throw new ValidationException("film без id");
         }
         return filmService.update(film);

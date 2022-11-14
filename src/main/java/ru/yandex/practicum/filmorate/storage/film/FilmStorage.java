@@ -9,6 +9,8 @@ public interface FilmStorage {
     Film add(Film film);
     Film update(Film film);
     List<Film> getAll();
-    boolean containsId(long id);
-    Optional<Film> getById(long id);
+    boolean containsId(Long id);
+    Optional<Film> getById(Long id);
+    void decreaseRating(Long filmId);
+    void increaseRating(Long filmId);
 }

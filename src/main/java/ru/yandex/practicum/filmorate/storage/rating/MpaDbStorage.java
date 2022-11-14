@@ -3,37 +3,37 @@ package ru.yandex.practicum.filmorate.storage.rating;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Component
-public class RatingDbStorage implements RatingStorage {
+public class MpaDbStorage implements MpaStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public RatingDbStorage(JdbcTemplate jdbcTemplate) {
+    public MpaDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public List<Rating> getAll() {
-        String sql = "SELECT * FROM RATING";
+    public List<Mpa> getAll() {
+        String sql = "SELECT * FROM MPA";
         return jdbcTemplate.query(
             sql,
-            (rs, rowNum) -> Rating.builder().id(rs.getLong("ID")).name(rs.getString("NAME")).build()
+            (rs, rowNum) -> Mpa.builder().id(rs.getLong("ID")).name(rs.getString("NAME")).build()
         );
     }
 
     @Override
-    public Optional<Rating> getRatingById(long id) {
-        String sql = "SELECT * FROM RATING WHERE id = ?";
+    public Optional<Mpa> getMpaById(long id) {
+        String sql = "SELECT * FROM MPA WHERE id = ?";
         return Optional.ofNullable(
             jdbcTemplate.queryForObject(
                     sql,
-                    (rs, rowNum) -> Rating.builder()
+                    (rs, rowNum) -> Mpa.builder()
                             .id(rs.getLong("ID"))
                             .name(rs.getString("NAME"))
                             .build(),
