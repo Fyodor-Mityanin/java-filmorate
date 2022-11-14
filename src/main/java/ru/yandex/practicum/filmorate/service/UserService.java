@@ -1,16 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exeptions.UsersRelationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -18,7 +16,9 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage
+    ) {
         this.userStorage = userStorage;
     }
 
@@ -38,69 +38,73 @@ public class UserService {
     }
 
     public void makeFriendship(Long id, Long friendId) {
-        User user = userStorage.getUserById(id);
-        if (user == null) {
-            throw new UserNotFoundException(String.format("Юзера с id %d не существует", id));
-        }
-        User friend = userStorage.getUserById(friendId);
-        if (friend == null) {
-            throw new UserNotFoundException(String.format("Юзера с id %d не существует", friendId));
-        }
-        if (isFriends(id, friendId)) {
+        Optional<User> user = userStorage.getUserById(id);
+        Optional<User> friend = userStorage.getUserById(friendId);
+        if (isFriends(user, friend)) {
             throw new UsersRelationException("Вы уже друзья");
         }
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
+        user.orElseThrow(() -> new UserNotFoundException(String.format("Юзера с id %d не существует", id)))
+                .getFriends()
+                .add(friendId);
+        friend.orElseThrow(() -> new UserNotFoundException(String.format("Юзера с id %d не существует", id)))
+                .getFriends()
+                .add(id);
     }
 
     public User getById(Long id) {
-        User user = userStorage.getUserById(id);
-        if (user == null) {
-            throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
-        }
-        return user;
+        Optional<User> user = userStorage.getUserById(id);
+        return user.orElseThrow(() -> new UserNotFoundException(String.format("Юзер с id %d не найден", id)));
     }
 
-    public boolean isFriends(Long id, Long friendId) {
-        return userStorage.getUserById(id).getFriends().contains(friendId)
-                && userStorage.getUserById(friendId).getFriends().contains(id);
+    public boolean isFriends(Optional<User> optUser, Optional<User> optFriend) {
+        if (optUser.isEmpty() || optFriend.isEmpty()) {
+            throw new UserNotFoundException("Юзера не существует");
+        }
+        User user = optUser.get();
+        User friend = optFriend.get();
+        return user.getFriends().contains(friend.getId()) && friend.getFriends().contains(user.getId());
     }
 
     public void destroyFriendship(Long id, Long friendId) {
-        User user = userStorage.getUserById(id);
-        User friend = userStorage.getUserById(friendId);
-        if (user == null) {
-            throw new UserNotFoundException(String.format("Юзера с id %d не существует", id));
-        }
-        if (friend == null) {
-            throw new UserNotFoundException(String.format("Юзера с id %d не существует", friendId));
-        }
-        if (!isFriends(id, friendId)) {
+        Optional<User> user = userStorage.getUserById(id);
+        Optional<User> friend = userStorage.getUserById(friendId);
+        if (!isFriends(user, friend)) {
             throw new UsersRelationException("Вы и так не друзья");
         }
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
+        user.orElseThrow(() -> new UserNotFoundException(String.format("Юзера с id %d не существует", id)))
+                .getFriends()
+                .remove(friendId);
+        friend.orElseThrow(() -> new UserNotFoundException(String.format("Юзера с id %d не существует", id)))
+                .getFriends()
+                .remove(id);
     }
 
     public List<User> getAllFriends(long id) {
-        User user = userStorage.getUserById(id);
+        Optional<User> user = userStorage.getUserById(id);
         List<User> friends = new ArrayList<>();
-        user.getFriends().forEach(friendId -> friends.add(userStorage.getUserById(friendId)));
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(String.format("Юзера с id %d не существует", id));
+        }
+        user.get().getFriends().forEach(
+                friendId -> userStorage.getUserById(friendId).ifPresent(friends::add)
+        );
         return friends;
     }
 
     public List<User> getAllCommonFriends(long id, long otherId) {
-        if (!userStorage.containsId(id)) {
+        Optional<User> user = userStorage.getUserById(id);
+        if (user.isEmpty()) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", id));
         }
-        if (!userStorage.containsId(otherId)) {
+        Optional<User> otherUser = userStorage.getUserById(otherId);
+        if (otherUser.isEmpty()) {
             throw new UserNotFoundException(String.format("Юзер с id %d не найден", otherId));
         }
-        Set<Long> userFriendsIds = new HashSet<>(userStorage.getUserById(id).getFriends());
-        Set<Long> otherUserFriendsIds = new HashSet<>(userStorage.getUserById(otherId).getFriends());
+        Set<Long> userFriendsIds = new HashSet<>(user.get().getFriends());
+        Set<Long> otherUserFriendsIds = new HashSet<>(otherUser.get().getFriends());
         userFriendsIds.retainAll(otherUserFriendsIds);
         List<User> commonFriends = new ArrayList<>();
-        userFriendsIds.forEach(friendId -> commonFriends.add(userStorage.getUserById(friendId)));
+        userFriendsIds.forEach(friendId -> userStorage.getUserById(friendId).ifPresent(commonFriends::add));
         return commonFriends;
     }
 

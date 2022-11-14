@@ -17,7 +17,7 @@ import java.util.Set;
 @Builder
 public class User {
 
-    private long id;
+    private Long id;
 
     @NonNull
     @NotBlank

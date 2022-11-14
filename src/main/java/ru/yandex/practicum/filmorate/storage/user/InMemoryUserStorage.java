@@ -10,7 +10,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Long, User> users = new HashMap<>();
 
-    private int idCounter = 1;
+    private Long idCounter = 1L;
 
     @Override
     public User add(User user) {
@@ -40,8 +40,8 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUserById(Long id) {
-        return users.get(id);
+    public Optional<User> getUserById(Long id) {
+        return Optional.ofNullable(users.get(id));
     }
 
     private void addToMap(User user) {

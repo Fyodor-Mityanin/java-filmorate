@@ -7,7 +7,7 @@ import java.util.*;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-    private int idCounter = 1;
+    private Long idCounter = 1L;
 
     private final Map<Long, Film> films = new HashMap<>();
 
@@ -36,8 +36,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getById(long id) {
-        return films.get(id);
+    public Optional<Film> getById(long id) {
+        return Optional.ofNullable(films.get(id));
     }
 
     private void addToMap(Film film) {
