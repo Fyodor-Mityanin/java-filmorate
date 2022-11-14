@@ -49,8 +49,7 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        Optional<Film> film = filmStorage.getById(filmId);
-        if (film.isEmpty()) {
+        if (!filmStorage.containsId(filmId)) {
             throw new FilmNotFoundException(String.format("Фильм с id %d не найден", filmId));
         }
         if (!userStorage.containsId(userId)) {
@@ -71,8 +70,7 @@ public class FilmService {
     }
 
     public List<Film> getMostPopular(Integer count) {
-        List<Film> films = filmStorage.getAll();
-        return films.stream()
+        return filmStorage.getAll().stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getRate(), o1.getRate()))
                 .limit(count)
                 .collect(Collectors.toList());

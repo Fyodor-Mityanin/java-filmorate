@@ -12,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/genre")
+@RequestMapping("/genres")
 public class GenreController {
 
     private final GenreService genreService;
@@ -27,7 +27,7 @@ public class GenreController {
     }
 
     @GetMapping("/{id}")
-    public Genre getOneById(@PathVariable long id) {
+    public Genre getOneById(@PathVariable Long id) {
         return genreService.getById(id);
     }
 }

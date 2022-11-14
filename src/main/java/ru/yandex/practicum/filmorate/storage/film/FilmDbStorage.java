@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -50,7 +51,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         log.info("Начало обновления фильма в таблице");
-        int rowNum = jdbcTemplate.update(
+        jdbcTemplate.update(
                 "UPDATE FILMS SET NAME=?, MPA=?, RATE=?, DESCRIPTION=?, RELEASE_DATE=?, DURATION=? WHERE ID=?",
                 film.getName(),
                 film.getMpa().getId(),
@@ -60,17 +61,32 @@ public class FilmDbStorage implements FilmStorage {
                 film.getDuration(),
                 film.getId()
         );
-        log.info("{} строк обновлено", rowNum);
-        return film;
+
+        String sqlDelGenre = "DELETE FROM FILM_GENRE WHERE FILM_ID=?";
+        jdbcTemplate.update(sqlDelGenre, film.getId());
+        if (film.getGenres() != null && film.getGenres().size() > 0) {
+            String sqlInsGenre = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
+            film.getGenres().forEach(
+                    genre -> {
+                        try {
+                            jdbcTemplate.update(sqlInsGenre, film.getId(), genre.getId());
+                        } catch (DuplicateKeyException e) {
+                            log.info(e.getMessage());
+                        }
+                    }
+            );
+
+        }
+        return getById(film.getId()).orElseThrow();
     }
 
     @Override
     public List<Film> getAll() {
         log.info("Поиск всех фильма");
         String sql = "SELECT F.*, group_concat(FG.GENRE_ID separator ',') AS GENRE\n" +
-                     "FROM FILMS F\n" +
-                     "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
-                     "GROUP BY F.ID";
+                "FROM FILMS F\n" +
+                "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
+                "GROUP BY F.ID";
         return jdbcTemplate.query(sql, this::makeFilm);
     }
 
@@ -84,10 +100,10 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> getById(Long id) {
         log.info("Поиск фильма по id={}", id);
         String sql = "SELECT F.*, group_concat(FG.GENRE_ID separator ',') AS GENRE\n" +
-                     "FROM FILMS F\n" +
-                     "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
-                     "WHERE id = ?\n" +
-                     "GROUP BY F.ID";
+                "FROM FILMS F\n" +
+                "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
+                "WHERE id = ?\n" +
+                "GROUP BY F.ID";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::makeFilm, id));
         } catch (EmptyResultDataAccessException e) {
@@ -97,14 +113,15 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void decreaseRating(Long filmId) {
-
+        String sql = "UPDATE FILMS SET RATE=RATE-5 WHERE id = ?";
+        jdbcTemplate.update(sql, filmId);
     }
 
     @Override
     public void increaseRating(Long filmId) {
-
+        String sql = "UPDATE FILMS SET RATE=RATE+5 WHERE id = ?";
+        jdbcTemplate.update(sql, filmId);
     }
-
 
     private Film makeFilm(ResultSet rs, int row) throws SQLException {
         String genres;
@@ -116,18 +133,17 @@ public class FilmDbStorage implements FilmStorage {
         List<Genre> genreList = genres != null ? Arrays
                 .stream(genres.split(","))
                 .map(i -> Genre.builder().id(Long.valueOf(i)).name(getGenreName(Long.parseLong(i))).build())
-                .collect(Collectors.toList()) : null;
-
+                .collect(Collectors.toList()) : new ArrayList<>();
         Mpa mpa = Mpa.builder()
                 .id(rs.getLong("MPA"))
                 .name(getMpaName(rs.getLong("MPA")))
                 .build();
-        
         return Film.builder()
                 .id(rs.getLong("ID"))
                 .name(rs.getString("NAME"))
                 .genres(genreList)
                 .mpa(mpa)
+                .rate(rs.getInt("RATE"))
                 .description(rs.getString("DESCRIPTION"))
                 .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
                 .duration(rs.getInt("DURATION"))

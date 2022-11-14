@@ -49,8 +49,10 @@ public class UserService {
     }
 
     public User getById(Long id) {
-        Optional<User> user = userStorage.getUserById(id);
-        return user.orElseThrow(() -> new UserNotFoundException(String.format("Юзер с id %d не найден", id)));
+        return userStorage.getUserById(id)
+                .orElseThrow(
+                        () -> new UserNotFoundException(String.format("Юзер с id %d не найден", id))
+                );
     }
 
     public boolean isSubscribe(Long authorId, Long subscriberId) {
