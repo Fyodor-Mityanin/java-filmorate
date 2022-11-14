@@ -39,7 +39,7 @@ public class UserController {
     @PutMapping
     public User put(@Valid @RequestBody User user) throws ValidationException {
         log.info("обновление пользователя");
-        if (user.getId() == 0) {
+        if (user.getId() == null) {
             throw new ValidationException("User без id");
         }
         return userService.update(user);
