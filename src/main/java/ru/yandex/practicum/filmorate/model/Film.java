@@ -28,7 +28,7 @@ public class Film {
     @Positive
     private int duration;
 
-    private List<Long> genre;
+    private List<Genre> genres;
 
     private Mpa mpa;
 

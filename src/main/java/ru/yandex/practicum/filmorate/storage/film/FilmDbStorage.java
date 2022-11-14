@@ -6,13 +6,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.Date;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,7 +26,6 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film add(Film film) {
         String sql = "INSERT INTO FILMS (NAME, MPA, RATE, DESCRIPTION, RELEASE_DATE, DURATION) VALUES (?, ?, ?, ?, ?, ?)";
-
         GeneratedKeyHolder gkh = new GeneratedKeyHolder();
         jdbcTemplate.update(conn -> {
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -39,10 +37,13 @@ public class FilmDbStorage implements FilmStorage {
             ps.setInt(6, film.getDuration());
             return ps;
         }, gkh);
-
-        long id = Objects.requireNonNull(gkh.getKey()).longValue();
-        log.info("Фильм создан, id={}", id);
-        Optional<Film> newFilm = getById(id);
+        long filmId = Objects.requireNonNull(gkh.getKey()).longValue();
+        if (film.getGenres() != null) {
+            String sqlGenre = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
+            film.getGenres().forEach(genre -> jdbcTemplate.update(sqlGenre, filmId, genre.getId()));
+        }
+        log.info("Фильм создан, id={}", filmId);
+        Optional<Film> newFilm = getById(filmId);
         return newFilm.orElseThrow();
     }
 
@@ -112,22 +113,34 @@ public class FilmDbStorage implements FilmStorage {
         } catch (SQLException e) {
             genres = null;
         }
-        List<Long> genreList = genres != null ? Arrays
+        List<Genre> genreList = genres != null ? Arrays
                 .stream(genres.split(","))
-                .map(Long::valueOf)
+                .map(i -> Genre.builder().id(Long.valueOf(i)).name(getGenreName(Long.parseLong(i))).build())
                 .collect(Collectors.toList()) : null;
 
         Mpa mpa = Mpa.builder()
                 .id(rs.getLong("MPA"))
+                .name(getMpaName(rs.getLong("MPA")))
                 .build();
+        
         return Film.builder()
                 .id(rs.getLong("ID"))
                 .name(rs.getString("NAME"))
-                .genre(genreList)
+                .genres(genreList)
                 .mpa(mpa)
                 .description(rs.getString("DESCRIPTION"))
                 .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
                 .duration(rs.getInt("DURATION"))
                 .build();
+    }
+
+    private String getMpaName(long mpaId) {
+        String sql = "SELECT NAME FROM MPA WHERE ID = ?";
+        return jdbcTemplate.queryForObject(sql, String.class, mpaId);
+    }
+
+    private String getGenreName(long genreId) {
+        String sql = "SELECT NAME FROM GENRE WHERE ID = ?";
+        return jdbcTemplate.queryForObject(sql, String.class, genreId);
     }
 }
