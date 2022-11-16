@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS rating;
 CREATE TABLE IF NOT EXISTS films (
     id           int PRIMARY KEY AUTO_INCREMENT,
     name         varchar(255),
-    mpa          int,
+    mpa          int CONSTRAINT films_mpa_id_fk REFERENCES mpa (id),
     rate         int DEFAULT 0,
     description  varchar(255),
     release_date date,
@@ -27,8 +27,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS subscribes (
-    author  int,
-    subscriber  int
+    author  int CONSTRAINT author_id_fk REFERENCES users (id),
+    subscriber int CONSTRAINT subscriber_id_fk REFERENCES users (id),
+    CONSTRAINT subscribe_id_fk UNIQUE (author, subscriber)
 );
 
 CREATE TABLE IF NOT EXISTS genre (
@@ -44,16 +45,7 @@ CREATE TABLE IF NOT EXISTS mpa (
 );
 
 CREATE TABLE IF NOT EXISTS film_genre (
-    film_id    int,
-    genre_id   int
+    film_id    int CONSTRAINT films_id_fk REFERENCES films (id),
+    genre_id   int CONSTRAINT genre_id_fk REFERENCES genre (id),
+    CONSTRAINT unique_id_fk UNIQUE (film_id, genre_id)
 );
-
-ALTER TABLE films ADD CONSTRAINT IF NOT EXISTS films_mpa_id_fk FOREIGN KEY (mpa) REFERENCES mpa (id);
-
-ALTER TABLE film_genre ADD CONSTRAINT IF NOT EXISTS films_id_fk FOREIGN KEY (film_id) REFERENCES films (id);
-ALTER TABLE film_genre ADD CONSTRAINT IF NOT EXISTS genre_id_fk FOREIGN KEY (genre_id) REFERENCES genre (id);
-ALTER TABLE film_genre ADD CONSTRAINT IF NOT EXISTS unique_id_fk UNIQUE (film_id, genre_id);
-
-ALTER TABLE subscribes ADD CONSTRAINT IF NOT EXISTS author_id_fk FOREIGN KEY (author) REFERENCES users (id);
-ALTER TABLE subscribes ADD CONSTRAINT IF NOT EXISTS subscriber_id_fk FOREIGN KEY (subscriber) REFERENCES users (id);
-ALTER TABLE subscribes ADD CONSTRAINT IF NOT EXISTS subscribe_id_fk UNIQUE (author, subscriber);

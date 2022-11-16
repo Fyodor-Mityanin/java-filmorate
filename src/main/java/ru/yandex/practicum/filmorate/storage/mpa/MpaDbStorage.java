@@ -46,4 +46,9 @@ public class MpaDbStorage implements MpaStorage {
             return Optional.empty();
         }
     }
+
+    public void add(String mpa) {
+        String sql = "INSERT INTO MPA (NAME) VALUES (?)";
+        jdbcTemplate.update(sql, mpa);
+    }
 }

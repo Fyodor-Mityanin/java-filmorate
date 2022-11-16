@@ -44,4 +44,9 @@ public class GenreDbStorage implements GenreStorage {
             return Optional.empty();
         }
     }
+
+    public void add(String genre) {
+        String sql = "INSERT INTO GENRE (NAME) VALUES (?)";
+        jdbcTemplate.update(sql, genre);
+    }
 }
