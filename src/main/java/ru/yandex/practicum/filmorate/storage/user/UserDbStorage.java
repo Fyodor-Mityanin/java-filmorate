@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -21,6 +22,7 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
+    @Autowired
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -42,11 +44,9 @@ public class UserDbStorage implements UserStorage {
             ps.setDate(4, Date.valueOf(user.getBirthday()));
             return ps;
         }, gkh);
-
-        long id = Objects.requireNonNull(gkh.getKey()).longValue();
-        log.info("Юзер создан, id={}", id);
-        Optional<User> newUser = getUserById(id);
-        return newUser.orElseThrow();
+        Long id = Objects.requireNonNull(gkh.getKey()).longValue();
+        user.setId(id);
+        return user;
     }
 
     @Override

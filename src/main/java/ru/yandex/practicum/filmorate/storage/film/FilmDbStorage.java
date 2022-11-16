@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,7 +10,10 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
+import javax.annotation.PostConstruct;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
@@ -19,9 +23,22 @@ import java.util.stream.Collectors;
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final MpaDbStorage mpaStorage;
+    private final GenreDbStorage genreStorage;
+    private final HashMap<Long, Genre> genreCache = new HashMap<>();
+    private final HashMap<Long, Mpa> mpaCache = new HashMap<>();
 
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    @Autowired
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, MpaDbStorage mpaStorage, GenreDbStorage genreStorage) {
         this.jdbcTemplate = jdbcTemplate;
+        this.mpaStorage = mpaStorage;
+        this.genreStorage = genreStorage;
+    }
+
+    @PostConstruct
+    private void loadCache() {
+        genreStorage.getAll().forEach(g -> genreCache.put(g.getId(), g));
+        mpaStorage.getAll().forEach(m -> mpaCache.put(m.getId(), m));
     }
 
     @Override
@@ -43,9 +60,8 @@ public class FilmDbStorage implements FilmStorage {
             String sqlGenre = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
             film.getGenres().forEach(genre -> jdbcTemplate.update(sqlGenre, filmId, genre.getId()));
         }
-        log.info("Фильм создан, id={}", filmId);
-        Optional<Film> newFilm = getById(filmId);
-        return newFilm.orElseThrow();
+        film.setId(filmId);
+        return film;
     }
 
     @Override
@@ -124,39 +140,24 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Film makeFilm(ResultSet rs, int row) throws SQLException {
-        String genres;
+        List<Genre> genreList;
         try {
-            genres = rs.getString("GENRE");
-        } catch (SQLException e) {
-            genres = null;
+            String genres = rs.getString("GENRE");
+            genreList = Arrays.stream(genres.split(","))
+                    .map(id -> genreCache.get(Long.parseLong(id)))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            genreList = Collections.emptyList();
         }
-        List<Genre> genreList = genres != null ? Arrays
-                .stream(genres.split(","))
-                .map(i -> Genre.builder().id(Long.valueOf(i)).name(getGenreName(Long.parseLong(i))).build())
-                .collect(Collectors.toList()) : new ArrayList<>();
-        Mpa mpa = Mpa.builder()
-                .id(rs.getLong("MPA"))
-                .name(getMpaName(rs.getLong("MPA")))
-                .build();
         return Film.builder()
                 .id(rs.getLong("ID"))
                 .name(rs.getString("NAME"))
                 .genres(genreList)
-                .mpa(mpa)
+                .mpa(mpaCache.get(rs.getLong("MPA")))
                 .rate(rs.getInt("RATE"))
                 .description(rs.getString("DESCRIPTION"))
                 .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
                 .duration(rs.getInt("DURATION"))
                 .build();
-    }
-
-    private String getMpaName(long mpaId) {
-        String sql = "SELECT NAME FROM MPA WHERE ID = ?";
-        return jdbcTemplate.queryForObject(sql, String.class, mpaId);
-    }
-
-    private String getGenreName(long genreId) {
-        String sql = "SELECT NAME FROM GENRE WHERE ID = ?";
-        return jdbcTemplate.queryForObject(sql, String.class, genreId);
     }
 }

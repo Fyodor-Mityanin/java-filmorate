@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeptions.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -12,6 +13,7 @@ public class MpaService {
 
     private final MpaStorage mpaStorage;
 
+    @Autowired
     public MpaService(MpaStorage mpaStorage) {
         this.mpaStorage = mpaStorage;
     }
