@@ -10,12 +10,9 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
-import javax.annotation.PostConstruct;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,22 +20,10 @@ import java.util.stream.Collectors;
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final MpaDbStorage mpaStorage;
-    private final GenreDbStorage genreStorage;
-    private final HashMap<Long, Genre> genreCache = new HashMap<>();
-    private final HashMap<Long, Mpa> mpaCache = new HashMap<>();
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, MpaDbStorage mpaStorage, GenreDbStorage genreStorage) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.mpaStorage = mpaStorage;
-        this.genreStorage = genreStorage;
-    }
-
-    @PostConstruct
-    private void loadCache() {
-        genreStorage.getAll().forEach(g -> genreCache.put(g.getId(), g));
-        mpaStorage.getAll().forEach(m -> mpaCache.put(m.getId(), m));
     }
 
     @Override
@@ -91,7 +76,6 @@ public class FilmDbStorage implements FilmStorage {
                         }
                     }
             );
-
         }
         return getById(film.getId()).orElseThrow();
     }
@@ -99,27 +83,35 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getAll() {
         log.info("Поиск всех фильма");
-        String sql = "SELECT F.*, group_concat(FG.GENRE_ID separator ',') AS GENRE\n" +
-                "FROM FILMS F\n" +
-                "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
-                "GROUP BY F.ID";
+        String sql = "SELECT F.*,\n" +
+                     "       M.NAME AS MPA_NAME,\n" +
+                     "       group_concat(concat(G.ID, ':', G.NAME) separator ',') AS GENRE\n" +
+                     "FROM FILMS F\n" +
+                     "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
+                     "LEFT JOIN MPA M ON F.MPA = M.ID\n" +
+                     "LEFT JOIN GENRE G ON FG.GENRE_ID = G.ID\n" +
+                     "GROUP BY F.ID";
         return jdbcTemplate.query(sql, this::makeFilm);
     }
 
     @Override
     public boolean containsId(Long id) {
-        String sql = "SELECT * FROM FILMS WHERE id = ?";
+        String sql = "SELECT F.*, M.NAME AS MPA_NAME FROM FILMS F LEFT JOIN MPA M ON F.MPA = M.ID WHERE F.id = ?";
         return !jdbcTemplate.query(sql, this::makeFilm, id).isEmpty();
     }
 
     @Override
     public Optional<Film> getById(Long id) {
         log.info("Поиск фильма по id={}", id);
-        String sql = "SELECT F.*, group_concat(FG.GENRE_ID separator ',') AS GENRE\n" +
-                "FROM FILMS F\n" +
-                "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
-                "WHERE id = ?\n" +
-                "GROUP BY F.ID";
+        String sql = "SELECT F.*,\n" +
+                     "       M.NAME AS MPA_NAME,\n" +
+                     "       group_concat(concat(G.ID, ':', G.NAME) separator ',') AS GENRE\n" +
+                     "FROM FILMS F\n" +
+                     "LEFT JOIN FILM_GENRE FG ON F.ID = FG.FILM_ID\n" +
+                     "LEFT JOIN MPA M ON F.MPA = M.ID\n" +
+                     "LEFT JOIN GENRE G ON FG.GENRE_ID = G.ID\n" +
+                     "WHERE F.ID = ?\n" +
+                     "GROUP BY F.ID";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::makeFilm, id));
         } catch (EmptyResultDataAccessException e) {
@@ -144,16 +136,26 @@ public class FilmDbStorage implements FilmStorage {
         try {
             String genres = rs.getString("GENRE");
             genreList = Arrays.stream(genres.split(","))
-                    .map(id -> genreCache.get(Long.parseLong(id)))
+                    .map(genreStr -> {
+                        String[] genreArr = genreStr.split(":");
+                        return Genre.builder()
+                                .id(Long.valueOf(genreArr[0]))
+                                .name(genreArr[1])
+                                .build();
+                    })
                     .collect(Collectors.toList());
         } catch (Exception e) {
             genreList = Collections.emptyList();
         }
+        Mpa mpa = Mpa.builder()
+                .id(rs.getLong("MPA"))
+                .name(rs.getString("MPA_NAME"))
+                .build();
         return Film.builder()
                 .id(rs.getLong("ID"))
                 .name(rs.getString("NAME"))
                 .genres(genreList)
-                .mpa(mpaCache.get(rs.getLong("MPA")))
+                .mpa(mpa)
                 .rate(rs.getInt("RATE"))
                 .description(rs.getString("DESCRIPTION"))
                 .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
