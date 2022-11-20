@@ -43,6 +43,5 @@ build/
 
 ### VS Code ###
 .vscode/
-
-*.db
-db/*
+/db/filmorate.trace.db
+/console.sql

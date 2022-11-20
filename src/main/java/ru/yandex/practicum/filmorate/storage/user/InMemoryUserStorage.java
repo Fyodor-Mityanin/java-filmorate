@@ -10,7 +10,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Long, User> users = new HashMap<>();
 
-    private int idCounter = 1;
+    private Long idCounter = 1L;
 
     @Override
     public User add(User user) {
@@ -35,13 +35,35 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public boolean containsId(long id) {
+    public boolean containsId(Long id) {
         return users.containsKey(id);
     }
 
     @Override
-    public User getUserById(Long id) {
-        return users.get(id);
+    public Optional<User> getUserById(Long id) {
+        return Optional.ofNullable(users.get(id));
+    }
+
+    @Override
+    public void createSubscribe(Long subscriberId, Long authorId) {
+        users.get(authorId).getSubscribers().add(subscriberId);
+    }
+
+    @Override
+    public boolean isSubscribe(Long authorId, Long subscriberId) {
+        return users.get(authorId).getSubscribers().contains(subscriberId);
+    }
+
+    @Override
+    public void removeSubscribe(Long authorId, Long subscriberId) {
+        users.get(authorId).getSubscribers().remove(subscriberId);
+    }
+
+    @Override
+    public List<User> getSubscribers(Long id) {
+        List<User> subscribers = new ArrayList<>();
+        users.get(id).getSubscribers().forEach(subId -> subscribers.add(users.get(subId)));
+        return subscribers;
     }
 
     private void addToMap(User user) {

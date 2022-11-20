@@ -7,7 +7,7 @@ import java.util.*;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-    private int idCounter = 1;
+    private Long idCounter = 1L;
 
     private final Map<Long, Film> films = new HashMap<>();
 
@@ -31,13 +31,21 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public boolean containsId(long id) {
+    public boolean containsId(Long id) {
         return films.containsKey(id);
     }
 
     @Override
-    public Film getById(long id) {
-        return films.get(id);
+    public Optional<Film> getById(Long id) {
+        return Optional.ofNullable(films.get(id));
+    }
+
+    @Override
+    public void decreaseRating(Long filmId) {
+    }
+
+    @Override
+    public void increaseRating(Long filmId) {
     }
 
     private void addToMap(Film film) {

@@ -46,7 +46,7 @@ class UserControllerTest {
     @Test
     void putUnexisted() {
         User user = User.builder()
-                .id(1)
+                .id(1L)
                 .email("mail@mail.ru")
                 .name("Юзер 1")
                 .login("User")

@@ -36,7 +36,7 @@ class FilmControllerTest {
     @Test
     void createFailDate() {
         Film film = Film.builder()
-                .id(1)
+                .id(1L)
                 .name("Кинч 1")
                 .description("Описание кинча")
                 .releaseDate(LocalDate.of(555, 2, 3))
@@ -63,7 +63,7 @@ class FilmControllerTest {
     @Test
     void putUnexisted() {
         Film film = Film.builder()
-                .id(1052)
+                .id(1052L)
                 .name("Фильм 1")
                 .description("Описание фильма")
                 .releaseDate(LocalDate.of(2022, 2, 3))
@@ -77,7 +77,7 @@ class FilmControllerTest {
     @Test
     void createBlankName() {
         Film film = Film.builder()
-                .id(1)
+                .id(1L)
                 .name("")
                 .description("Описание фильма")
                 .releaseDate(LocalDate.of(2022, 2, 3))
@@ -90,7 +90,7 @@ class FilmControllerTest {
     @Test
     void createDescriptionOver200() {
         Film film = Film.builder()
-                .id(1)
+                .id(1L)
                 .name("Фильм 1")
                 .description("Описание фильма 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890")
                 .releaseDate(LocalDate.of(2022, 2, 3))
@@ -103,7 +103,7 @@ class FilmControllerTest {
     @Test
     void createDurationNegative() {
         Film film = Film.builder()
-                .id(1)
+                .id(1L)
                 .name("Фильм")
                 .description("Описание фильма")
                 .releaseDate(LocalDate.of(2022, 2, 3))

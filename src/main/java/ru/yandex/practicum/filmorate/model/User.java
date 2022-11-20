@@ -10,14 +10,13 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Builder
 public class User {
 
-    private long id;
+    private Long id;
 
     @NonNull
     @NotBlank
@@ -35,5 +34,5 @@ public class User {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 
-    private final Set<Long> friends = new HashSet<>();
+    private List<Long> subscribers;
 }
